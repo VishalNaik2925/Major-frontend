@@ -26,12 +26,19 @@ const Navbar = () => {
     logout();
     navigate('/login');
   };
-  
+
+  const navLinks = [
+    { path: '/', label: 'Home' },
+    { path: '/symptom-analyzer', label: 'Symptom Analyzer' },
+    { path: '/xray-detection', label: 'X-ray Detection' },
+    { path: '/dashboard', label: 'Dashboard' }
+  ];
+
   return (
     <nav className={`sticky top-0 z-50 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2" onClick={closeMobileMenu}>
-          <img src="/static/img.png" alt="Health Care Center Logo" className="h-10 w-10 object-contain" />
+          <img src="/ai.png" alt="Health Care Center Logo" className="h-10 w-10 object-contain" />
           <span className={`font-bold text-xl tracking-wide ${isDarkMode ? 'text-white' : 'text-blue-700'}`}>
             Health Care Center
           </span>
@@ -42,7 +49,7 @@ const Navbar = () => {
           <button
             onClick={toggleMobileMenu}
             className={`w-10 h-10 flex items-center justify-center rounded-lg focus:outline-none transition-colors ${
-              isDarkMode 
+              isDarkMode
                 ? 'bg-gray-700 hover:bg-gray-600' 
                 : 'bg-gray-100 hover:bg-gray-200'
             }`}
@@ -59,13 +66,13 @@ const Navbar = () => {
         {/* Navigation Links */}
         <ul className={`fixed md:static top-0 right-0 h-full w-72 md:w-auto 
           ${isDarkMode ? 'bg-gray-800 md:bg-transparent' : 'bg-white md:bg-transparent'}
-          shadow-lg md:shadow-none flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 p-6 md:p-0 
+          shadow-lg md:shadow-none flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 p-6 md:p-0 
           transition-all duration-300 z-40 
           ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}
         >
           {/* Close Button for Mobile Menu */}
           <li className="w-full md:hidden mb-4 flex justify-end">
-            <button
+            <button 
               onClick={closeMobileMenu}
               className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
                 isDarkMode 
@@ -151,6 +158,23 @@ const Navbar = () => {
               <i className="fas fa-chevron-right md:hidden text-sm opacity-50"></i>
             </Link>
           </li>
+          <li className="w-full md:w-auto">
+            <Link 
+              to="/about" 
+              className={`flex items-center justify-between px-3 py-2 rounded-md text-base font-medium transition-colors w-full ${
+                isActive('/about')
+                  ? (isDarkMode ? 'bg-gray-700 text-white' : 'bg-blue-100 text-blue-700')
+                  : (isDarkMode ? 'text-gray-300 hover:bg-gray-700 hover:text-white' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700')
+              }`}
+              onClick={closeMobileMenu}
+            >
+              <div className="flex items-center gap-2">
+                <i className="fas fa-info-circle"></i>
+                About
+              </div>
+              <i className="fas fa-chevron-right md:hidden text-sm opacity-50"></i>
+            </Link>
+          </li>
 
           {/* Logout Button */}
           <li className="w-full md:w-auto">
@@ -158,7 +182,7 @@ const Navbar = () => {
               onClick={handleLogout}
               className={`flex items-center justify-between px-3 py-2 rounded-md text-base font-medium transition-colors w-full ${
                 isDarkMode 
-                  ? 'text-gray-300 hover:bg-gray-700 hover:text-white' 
+                  ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
                   : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
               }`}
             >
@@ -170,8 +194,8 @@ const Navbar = () => {
             </button>
           </li>
 
-          {/* Desktop Theme Toggle */}
-          <li className="hidden md:block">
+          {/* Theme Toggle - Now at the end */}
+          <li className="w-full md:w-auto flex items-center">
             <button
               onClick={toggleTheme}
               className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-200 ${

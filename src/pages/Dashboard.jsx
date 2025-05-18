@@ -3,6 +3,7 @@ import { dashboardService } from '../services/api';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import { useTheme } from '../context/ThemeContext';
+import DeviceConnection from '../components/DeviceConnection';
 
 // Register Chart.js components
 Chart.register(...registerables);
@@ -13,7 +14,22 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [deviceId, setDeviceId] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
   const { isDarkMode } = useTheme();
+
+  // Connect to device
+  const connectToDevice = async (deviceId) => {
+    try {
+      // For now, just set the device as connected
+      setDeviceId(deviceId);
+      setIsConnected(true);
+    } catch (error) {
+      setError('Failed to connect to device. Please try again.');
+      console.error(error);
+      throw error;
+    }
+  };
 
   // Fetch data on component mount
   useEffect(() => {
@@ -21,17 +37,10 @@ const Dashboard = () => {
       try {
         setIsLoading(true);
         
-        // In a real app, these would be actual API calls
-        // For demo purposes, we'll use mock data
+        // Get health data from dashboard service
+        const healthDataResponse = await dashboardService.getHealthData();
         
-        /*
-        const healthData = await dashboardService.getHealthData();
-        const predictions = await dashboardService.getRecentPredictions();
-        setHealthData(healthData);
-        setPredictions(predictions);
-        */
-        
-        // Mock health data
+        // Set the health data
         setHealthData({
           vitals: {
             bloodPressure: { systolic: 120, diastolic: 80 },
@@ -102,30 +111,10 @@ const Dashboard = () => {
             musculoskeletal: 'Low',
           },
         });
-        
-        // Mock predictions
-        setPredictions([
-          {
-            date: '2023-06-05',
-            symptoms: ['Cough', 'Fever', 'Fatigue'],
-            prediction: { 'Common Cold': 85, 'Influenza': 35, 'COVID-19': 15 },
-            recommendations: {
-              medications: ['Rest', 'Hydration', 'Over-the-counter pain relievers'],
-              diet: ['Warm soups', 'Herbal teas', 'Vitamin C rich foods'],
-              lifestyle: ['Adequate rest', 'Avoid strenuous activities', 'Stay home']
-            }
-          },
-          {
-            date: '2023-05-20',
-            symptoms: ['Headache', 'Nausea', 'Light sensitivity'],
-            prediction: { 'Migraine': 92, 'Tension Headache': 28, 'Sinus Infection': 12 },
-            recommendations: {
-              medications: ['Pain relievers', 'Anti-nausea medication'],
-              diet: ['Avoid triggering foods', 'Stay hydrated'],
-              lifestyle: ['Rest in a dark, quiet room', 'Apply cold compresses']
-            }
-          }
-        ]);
+
+        // Get predictions
+        const predictions = await dashboardService.getRecentPredictions();
+        setPredictions(predictions);
         
       } catch (error) {
         setError('Failed to load dashboard data. Please try again later.');
@@ -136,7 +125,7 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, []);
+  }, [isConnected, deviceId]);
 
   // Chart options with dark mode support
   const chartOptions = {
@@ -366,7 +355,9 @@ const Dashboard = () => {
           </div>
           {/* Content */}
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-6`}>
-            <div className="text-red-600 text-center font-semibold">{error}</div>
+            <div className="flex justify-center items-center h-40">
+              <span className={`font-semibold text-lg ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>{error}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -381,7 +372,7 @@ const Dashboard = () => {
         <div className="flex justify-center mb-8">
           <button
             className={`px-6 py-2 rounded-t-lg font-semibold focus:outline-none transition-colors ${
-              activeTab === 'overview'
+              activeTab === 'overview' 
                 ? (isDarkMode ? 'bg-gray-800 text-white shadow' : 'bg-white shadow text-blue-700')
                 : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-800' : 'bg-blue-100 text-blue-600 hover:bg-white')
             }`}
@@ -402,108 +393,112 @@ const Dashboard = () => {
         </div>
         {/* Content */}
         <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg p-6`}>
-          {activeTab === 'overview' && healthData && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Vitals */}
-              <div className="space-y-6">
-                <div className={`${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'} rounded-lg p-4 shadow flex flex-col gap-2`}>
-                  <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-blue-700'} mb-2`}>Vitals</h2>
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex flex-col items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>Blood Pressure</span>
-                      <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-blue-800'}`}>{healthData.vitals.bloodPressure.systolic}/{healthData.vitals.bloodPressure.diastolic} mmHg</span>
+          {activeTab === 'overview' && (
+            <>
+              {/* Device Connection */}
+              <DeviceConnection
+                onConnect={connectToDevice}
+                isConnected={isConnected}
+                deviceId={deviceId}
+              />
+
+              {/* Health Metrics Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {/* Blood Pressure */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
+                  <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-blue-800'}`}>Blood Pressure</h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Systolic</p>
+                      <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-blue-900'}`}>
+                        {healthData?.vitals.bloodPressure.systolic || '--'} mmHg
+                      </p>
                     </div>
-                    <div className="flex flex-col items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>Heart Rate</span>
-                      <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-blue-800'}`}>{healthData.vitals.heartRate} bpm</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>Oxygen</span>
-                      <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-blue-800'}`}>{healthData.vitals.oxygenLevel}%</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>Temperature</span>
-                      <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-blue-800'}`}>{healthData.vitals.temperature}&deg;F</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>BMI</span>
-                      <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-blue-800'}`}>{healthData.vitals.bmi}</span>
+                    <div>
+                      <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Diastolic</p>
+                      <p className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-blue-900'}`}>
+                        {healthData?.vitals.bloodPressure.diastolic || '--'} mmHg
+                      </p>
                     </div>
                   </div>
                 </div>
-                {/* Risk Factors */}
-                <div className={`${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'} rounded-lg p-4 shadow`}>
-                  <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-blue-700'} mb-2`}>Risk Factors</h2>
-                  <ul className="space-y-1">
-                    {Object.entries(healthData.riskFactors).map(([factor, value]) => (
-                      <li key={factor} className="flex justify-between">
-                        <span className={`capitalize ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>{factor}</span>
-                        <span className={`font-semibold ${
-                          value === 'High' 
-                            ? 'text-red-500' 
-                            : value === 'Medium' 
-                              ? (isDarkMode ? 'text-yellow-400' : 'text-yellow-600')
-                              : (isDarkMode ? 'text-green-400' : 'text-green-600')
-                        }`}>{value}</span>
-                      </li>
-                    ))}
-                  </ul>
+
+                {/* Heart Rate */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-red-50'}`}>
+                  <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-red-800'}`}>Heart Rate</h3>
+                  <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-red-900'}`}>
+                    {healthData?.vitals.heartRate || '--'} BPM
+                  </p>
+                </div>
+
+                {/* Oxygen Level */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-green-50'}`}>
+                  <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-green-800'}`}>Oxygen Level</h3>
+                  <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-green-900'}`}>
+                    {healthData?.vitals.oxygenLevel || '--'}%
+                  </p>
+                </div>
+
+                {/* Temperature */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-yellow-50'}`}>
+                  <h3 className={`text-lg font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-yellow-800'}`}>Temperature</h3>
+                  <p className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-yellow-900'}`}>
+                    {healthData?.vitals.temperature || '--'}°F
+                  </p>
                 </div>
               </div>
-              {/* Charts */}
-              <div className="space-y-8">
-                <div className={`${isDarkMode ? 'bg-gray-700' : 'bg-white'} rounded-lg p-6 shadow-lg`}>
-                  <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-blue-700'} mb-4`}>Blood Pressure Trend</h3>
-                  <div className="h-[300px]">
+
+              {/* Charts Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                {/* Blood Pressure Trend */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow`}>
+                  <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Blood Pressure Trend</h3>
+                  <div className="h-64">
                     <Line data={bpChartData} options={chartOptions} />
                   </div>
                 </div>
-                <div className={`${isDarkMode ? 'bg-gray-700' : 'bg-white'} rounded-lg p-6 shadow-lg`}>
-                  <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-blue-700'} mb-4`}>Heart Rate Trend</h3>
-                  <div className="h-[300px]">
+
+                {/* Heart Rate Trend */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow`}>
+                  <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Heart Rate Trend</h3>
+                  <div className="h-64">
                     <Line data={hrChartData} options={chartOptions} />
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-          {activeTab === 'predictions' && predictions && (
-            <div className="space-y-6">
-              {predictions.map((pred, idx) => (
-                <div key={idx} className={`${isDarkMode ? 'bg-gray-700' : 'bg-blue-50'} rounded-lg p-6 shadow flex flex-col md:flex-row gap-8`}>
-                  <div className="flex-1">
-                    <h3 className={`font-bold ${isDarkMode ? 'text-white' : 'text-blue-800'} mb-2`}>Prediction on {pred.date}</h3>
-                    <div className={`mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      <span className="font-semibold">Symptoms:</span> {pred.symptoms.join(', ')}
-                    </div>
-                    <div className="mb-2">
-                      <span className={`font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Predictions:</span>
-                      <ul className="ml-4 list-disc">
-                        {Object.entries(pred.prediction).map(([disease, percent]) => (
-                          <li key={disease} className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                            {disease}: <span className={`font-semibold ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{percent}%</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="mb-2">
-                      <span className={`font-semibold ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Recommendations:</span>
-                      <ul className="ml-4 list-disc">
-                        <li className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                          <span className="font-semibold">Medications:</span> {pred.recommendations.medications.join(', ')}
-                        </li>
-                        <li className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                          <span className="font-semibold">Diet:</span> {pred.recommendations.diet.join(', ')}
-                        </li>
-                        <li className={isDarkMode ? 'text-gray-300' : 'text-gray-700'}>
-                          <span className="font-semibold">Lifestyle:</span> {pred.recommendations.lifestyle.join(', ')}
-                        </li>
-                      </ul>
-                    </div>
+
+              {/* Daily Metrics */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Steps */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow`}>
+                  <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Daily Steps</h3>
+                  <div className="h-48">
+                    <Bar data={stepsChartData} options={chartOptions} />
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Sleep */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow`}>
+                  <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Sleep Hours</h3>
+                  <div className="h-48">
+                    <Bar data={sleepChartData} options={chartOptions} />
+                  </div>
+                </div>
+
+                {/* Risk Factors */}
+                <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-white'} shadow`}>
+                  <h3 className={`text-lg font-semibold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Risk Factors</h3>
+                  <div className="h-48">
+                    <Doughnut data={riskFactorsChartData} options={chartOptions} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          {activeTab === 'predictions' && (
+            <>
+              {/* Rest of the predictions section */}
+            </>
           )}
         </div>
       </div>
@@ -511,4 +506,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

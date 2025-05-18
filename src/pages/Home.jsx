@@ -26,7 +26,7 @@ const Home = () => {
               </div>
             </div>
             <div className="md:w-1/2">
-              <img src="/static/img.png" alt="Medical AI" className="w-full max-w-lg mx-auto rounded-xl shadow-lg" />
+              <img src="/ai.png" alt="Medical AI" className="w-full max-w-lg mx-auto rounded-xl shadow-lg" />
             </div>
           </div>
         </div>
@@ -99,7 +99,7 @@ const Home = () => {
             </Link>
           </div>
           <div className="md:w-1/2 flex justify-center">
-            <img src="/static/uploads/xray-sample.jpg" alt="X-ray Analysis" className="rounded-xl shadow-lg w-full max-w-md" />
+            <img src="/xray.png" alt="X-ray Analysis" className="rounded-xl shadow-lg w-full max-w-md" />
           </div>
         </div>
       </section>

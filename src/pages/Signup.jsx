@@ -7,7 +7,7 @@ const Signup = () => {
       <div className="w-full flex flex-col items-center">
         <div className="mb-8">
           <img
-            src="/logo.png"
+            src="/ai.png"
             alt="Logo"
             className="h-12 w-auto"
           />

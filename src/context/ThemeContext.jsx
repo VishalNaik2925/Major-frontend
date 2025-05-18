@@ -6,7 +6,8 @@ export function ThemeProvider({ children }) {
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('theme');
-      return savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      // Default to light mode if no theme is saved
+      return savedTheme === 'dark';
     }
     return false;
   });

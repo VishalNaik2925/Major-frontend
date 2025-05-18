@@ -12,6 +12,9 @@ import Home from './pages/Home';
 import SymptomAnalyzer from './pages/SymptomAnalyzer';
 import XrayDetection from './pages/XrayDetection';
 import NotFound from './pages/NotFound';
+import About from './pages/About';
+import Team from './pages/Team';
+import Contact from './pages/Contact';
 
 // Components
 import Navbar from './components/common/Navbar';
@@ -74,6 +77,30 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <XrayDetection />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/about"
+                element={
+                  <ProtectedRoute>
+                    <About />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/team"
+                element={
+                  <ProtectedRoute>
+                    <Team />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/contact"
+                element={
+                  <ProtectedRoute>
+                    <Contact />
                   </ProtectedRoute>
                 }
               />
